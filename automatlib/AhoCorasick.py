@@ -123,7 +123,8 @@ class AhoCorasickAutomaton:
 
         :return: graphviz code
         """
-        dot = Digraph(engine="circo")
+        dot = Digraph(engine="neato")
+        dot.graph_attr.update(size="4,4")
 
         for v_idx in range(len(self.vertices)):
             vertex_style = "doublecircle" if len(self.vertices[v_idx].output_fun) > 0 else "circle"
