@@ -7,6 +7,7 @@ __author__ = "vortexxx192@gmail.com"
 
 
 from Queue import Queue
+import json
 
 
 class AhoCorasickAutomaton:
@@ -26,6 +27,23 @@ class AhoCorasickAutomaton:
             self.prev_vert_idx = prev_vert_idx  # by default, each vertex has root as a parent
             self.failure_fun = failure_fun        # by default, suffix link of each vertex points to root
             self.symbol = symbol     # by which symbol we came to this state. Undefined for root
+
+
+        def fromJSON(self, data):
+            """
+            Construct __Node from JSON data
+
+            :param data: dictionary of values that new node will be built from
+            :return: None
+            """
+
+            data = json.loads(data)
+
+            self.next = data["next"]
+            self.output_fun = data["output_fun"]
+            self.prev_vert_idx = data["prev_vert_idx"]
+            self.failure_fun = data["failure_fun"]
+            self.symbol = data["symbol"]
 
 
     def __init__(self, words=[]):
@@ -65,6 +83,43 @@ class AhoCorasickAutomaton:
             found_words |= set(self.vertices[v_idx].output_fun)
 
         return list(found_words)
+
+
+    def toJSON(self):
+        """
+        Serialize AC automaton
+
+        :return: JSON string that represents the automaton
+        """
+
+        return json.dumps(self, default=lambda obj: obj.__dict__)
+
+
+    @staticmethod
+    def fromJSON(data):
+        """
+        Deserialize automaton.
+
+        :param data: JSON string that represents automaton
+        :return: AhoCorasick object
+        """
+
+        if data is None:
+            return None
+
+        data = json.loads(data)
+
+        to_return = AhoCorasickAutomaton()
+        to_return.words = []
+        for word in data["words"]:
+            to_return.words.append(word)
+
+        to_return.vertices = []
+        for vertex_data in data["vertices"]:
+            to_return.vertices.append(AhoCorasickAutomaton.__Node(next={}, output_fun=[]))
+            to_return.vertices[-1].fromJSON(json.dumps(vertex_data))
+
+        return to_return
 
 
     def __add_to_trie(self, word):

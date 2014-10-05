@@ -9,6 +9,7 @@ Queries of the following two types can be processed:
 __author__ = "vortexxx192@gmail.com"
 
 from AhoCorasick import AhoCorasickAutomaton as AC
+import json
 
 
 class DynamicAC:
@@ -54,3 +55,36 @@ class DynamicAC:
             found_words |= set(automaton.search(text))
 
         return list(found_words)
+
+
+    def toJSON(self):
+        """
+        Serialize automatons.
+
+        :return: JSON string that represents set of automatons
+        """
+        return json.dumps(self, default=lambda obj: obj.__dict__)
+
+
+    @staticmethod
+    def fromJSON(data):
+        """
+        Deserialize object from JSON string
+
+        :param data: JSON string
+        :return: DynamicAC object that has the structure described in 'data' json string
+        """
+
+        if data is None:
+            return None
+
+        data = json.loads(data)
+
+        # load basic structure
+        to_return = DynamicAC()
+
+        # add automatons one by one
+        for automaton_data in data["automata"]:
+            to_return.automata.append(AC.fromJSON(json.dumps(automaton_data)))
+
+        return to_return
