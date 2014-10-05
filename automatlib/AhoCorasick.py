@@ -6,7 +6,7 @@ Google the paper "String Matching: An Aid to Bibliographic Search" for details.
 __author__ = "vortexxx192@gmail.com"
 
 
-from string import printable as alphabet
+from Queue import Queue
 
 
 class AhoCorasickAutomaton:
@@ -14,16 +14,22 @@ class AhoCorasickAutomaton:
         """
         Description of every DFA vertex.
         """
-        def __init__(self):
-            self.next = [-1 for _ in alphabet]    # transition function
-            self.is_end_state = False
-            self.prev_state_idx = 0     # by default, each vertex has root as a parent
-            self.fail_fun = 0           # by default, suffix link of each vertex points to root
-            self.symbol = '$'     # by which symbol we came to this state. Undefined for root
+        def __init__(self,
+                     next={},
+                     output_fun=[],
+                     prev_vert_idx=0,
+                     failure_fun=0,
+                     symbol='$'):
+
+            self.next = next    # transition function
+            self.output_fun = output_fun
+            self.prev_vert_idx = prev_vert_idx  # by default, each vertex has root as a parent
+            self.failure_fun = failure_fun        # by default, suffix link of each vertex points to root
+            self.symbol = symbol     # by which symbol we came to this state. Undefined for root
 
 
     def __init__(self, words=[]):
-        self.vertices = []
+        self.vertices = [self.__Node()]
         self.words = words
 
         # construction of the AC-automaton consists of the following phases:
@@ -34,31 +40,43 @@ class AhoCorasickAutomaton:
         # 2. computing the failure function (suffix links)
         self.__compute_failure_fun()
 
-        # 3. compressing suffix links and actually
-        # turning the trie with suffix links to DFA
-        self.__compress_suff_links()
-
 
     def search(self, text):
         """
         Search for occurences of words in text.
 
         :param word: str, text where the search will be performed.
-        :return: list of pairs (position, word)
+        :return: list of found words
         """
 
-        pass
+        v_idx = 0
+        found_words = set()
+        for c in text:
+            v_idx = self.vertices[v_idx].next[c] if c in self.vertices[v_idx].next else 0
+            found_words |= set(self.vertices[v_idx].output_fun)
+
+        return list(found_words)
 
 
-    def __add_to_trie(self, s):
+    def __add_to_trie(self, word):
         """
-        Add string s to the trie.
+        Add string 'word' to the trie.
 
-        :param s: str, string to be added in trie.
+        :param word: str, string to be added in trie.
         :return: None
         """
 
-        pass
+        v_idx = 0    # index of current vertex
+        for c in word:
+            # if there is no transition by c, create it
+            if c not in self.vertices[v_idx].next:
+                self.vertices.append(self.__Node(prev_vert_idx=v_idx, symbol=c, next={}, output_fun=[]))
+                self.vertices[v_idx].next[c] = len(self.vertices) - 1
+
+            v_idx = self.vertices[v_idx].next[c]
+
+        # mark last vertex of the word
+        self.vertices[v_idx].output_fun.append(word)
 
 
     def __compute_failure_fun(self):
@@ -68,14 +86,40 @@ class AhoCorasickAutomaton:
         :return: None
         """
 
-        pass
+        # let's perform the breadth-first search on trie
+        bfs_queue = Queue()
+        bfs_queue.put(0)    # root is the starting vertex
 
+        while not bfs_queue.empty():
+            # take vertex from queue
+            v_idx = bfs_queue.get()
 
-    def __compress_suff_links(self):
-        """
-        Turn trie with suffix links to DFA
+            # put all adjacent vertices to queue
+            for adjacent_vert_idx in self.vertices[v_idx].next.values():
+                bfs_queue.put(adjacent_vert_idx)
 
-        :return: None
-        """
+            # if current vertex isn't a root and doesn't have root as a direct predecessor
+            if v_idx != 0 and self.vertices[v_idx].prev_vert_idx != 0:
+                u_idx = self.vertices[self.vertices[v_idx].prev_vert_idx].failure_fun
+                symb = self.vertices[v_idx].symbol
 
-        pass
+                # jump on suffix links
+                while True:
+                    if symb in self.vertices[u_idx].next:
+                        self.vertices[v_idx].failure_fun = self.vertices[u_idx].next[symb]
+
+                        # unite output functions
+                        self.vertices[v_idx].output_fun = list(set(self.vertices[v_idx].output_fun).union(
+                            set(self.vertices[self.vertices[u_idx].next[symb]].output_fun)
+                        ))
+
+                        u_idx = self.vertices[u_idx].next[symb]
+                        for c in self.vertices[u_idx].next:
+                            if c not in self.vertices[v_idx].next:
+                                self.vertices[v_idx].next[c] = self.vertices[u_idx].next[c]
+                        break
+
+                    if u_idx == 0:
+                        break
+
+                    u_idx = self.vertices[u_idx].failure_fun
