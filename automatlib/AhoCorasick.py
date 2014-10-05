@@ -8,6 +8,7 @@ __author__ = "vortexxx192@gmail.com"
 
 from Queue import Queue
 import json
+from graphviz import Digraph
 
 
 class AhoCorasickAutomaton:
@@ -114,6 +115,29 @@ class AhoCorasickAutomaton:
             to_return.vertices[-1].fromJSON(json.dumps(vertex_data))
 
         return to_return
+
+
+    def toGraphvizSource(self):
+        """
+        Generate graphviz code that can be used to draw the automaton.
+
+        :return: graphviz code
+        """
+        dot = Digraph(engine="circo")
+
+        for v_idx in range(len(self.vertices)):
+            vertex_style = "doublecircle" if len(self.vertices[v_idx].output_fun) > 0 else "circle"
+            if v_idx == 0: vertex_style = "point"
+            dot.node(str(v_idx), str(v_idx), shape=vertex_style)
+
+        for v_idx in range(len(self.vertices)):
+            for c in self.vertices[v_idx].next:
+                to_idx = self.vertices[v_idx].next[c]
+                dot.edge(str(v_idx), str(to_idx), label=c, constraint="false")
+
+        dot.render('automaton')
+
+        return dot.source
 
 
     def __add_to_trie(self, word):
