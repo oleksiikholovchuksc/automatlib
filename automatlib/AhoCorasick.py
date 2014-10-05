@@ -136,6 +136,7 @@ class AhoCorasickAutomaton:
                 to_idx = self.vertices[v_idx].next[c]
                 dot.edge(str(v_idx), str(to_idx), label=c, constraint="false")
 
+        dot.format = "png"
         dot.render('automaton')
 
         return dot.source
