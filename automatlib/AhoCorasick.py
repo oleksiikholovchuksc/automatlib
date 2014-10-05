@@ -58,6 +58,9 @@ class AhoCorasickAutomaton:
         # 2. computing the failure function (suffix links)
         self.__compute_failure_fun()
 
+        # 3. turn trie with suffix links to DFA
+        self.__build_remaining_transitions()
+
 
     def search(self, text):
         """
@@ -70,16 +73,7 @@ class AhoCorasickAutomaton:
         v_idx = 0
         found_words = set()
         for c in text:
-            while True:
-                if c in self.vertices[v_idx].next:
-                    v_idx = self.vertices[v_idx].next[c]
-                    break
-
-                if v_idx == 0:
-                    break
-
-                v_idx = self.vertices[v_idx].failure_fun
-
+            v_idx = self.vertices[v_idx].next[c] if c in self.vertices[v_idx].next else 0
             found_words |= set(self.vertices[v_idx].output_fun)
 
         return list(found_words)
@@ -182,6 +176,37 @@ class AhoCorasickAutomaton:
                             if c not in self.vertices[v_idx].next:
                                 self.vertices[v_idx].next[c] = self.vertices[u_idx].next[c]
                         break
+
+                    if u_idx == 0:
+                        break
+
+                    u_idx = self.vertices[u_idx].failure_fun
+
+
+    def __build_remaining_transitions(self):
+        """
+        Build transitions such that there will be no necessity to jump over suffix links
+        during search process
+
+        :return: None
+        """
+
+        # get all characters in words
+        chars = set()
+        for word in self.words:
+            for letter in word:
+                chars.add(letter)
+
+        for v_idx in range(len(self.vertices)):
+            for c in chars:
+                if v_idx == 0:
+                    continue
+
+                u_idx = self.vertices[v_idx].failure_fun
+
+                while True:
+                    if c not in self.vertices[v_idx].next and c in self.vertices[u_idx].next:
+                        self.vertices[v_idx].next[c] = self.vertices[u_idx].next[c]
 
                     if u_idx == 0:
                         break
