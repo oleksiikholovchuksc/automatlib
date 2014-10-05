@@ -29,7 +29,7 @@ class AhoCorasickAutomaton:
 
 
     def __init__(self, words=[]):
-        self.vertices = [self.__Node()]
+        self.vertices = [self.__Node(next={}, output_fun=[])]
         self.words = words
 
         # construction of the AC-automaton consists of the following phases:
@@ -52,7 +52,16 @@ class AhoCorasickAutomaton:
         v_idx = 0
         found_words = set()
         for c in text:
-            v_idx = self.vertices[v_idx].next[c] if c in self.vertices[v_idx].next else 0
+            while True:
+                if c in self.vertices[v_idx].next:
+                    v_idx = self.vertices[v_idx].next[c]
+                    break
+
+                if v_idx == 0:
+                    break
+
+                v_idx = self.vertices[v_idx].failure_fun
+
             found_words |= set(self.vertices[v_idx].output_fun)
 
         return list(found_words)
