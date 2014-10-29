@@ -1,5 +1,12 @@
 #automatlib
 
+####Python library for efficient solving the dynamic matching. It was written during the university research, so don't treat it as something useful in production (but you are welcome if you want).
+
+Assume we have a set of words *S* and we want two perform two operations:
+- **add(w)** -- add word *w* in *S*
+- **search(T)** -- find all words from *S* that are present in text *T* as substrings.
+
+####Usage instructions in Russian:
 Я переписал всё на Python, потому что он проще и понятнее. А еще потому что написанный на С++ код очень плохой и его все равно пришлось бы переписывать с нуля.
 
 ###Необходимые программы
