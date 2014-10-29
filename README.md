@@ -1,6 +1,6 @@
 #automatlib
 
-####Python library for efficient solving the dynamic matching. It was written during the university research, so don't treat it as something useful in production (but you are welcome if you want).
+####Python library to solve the dynamic matching problem efficiently. It was written during the university research, so don't treat it as something useful in production (but you are welcome if you want).
 
 Assume we have a set of words *S* and we want two perform two operations:
 - **add(w)** -- add word *w* in *S*
